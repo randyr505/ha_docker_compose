@@ -1,0 +1,150 @@
+version: '3.4'
+
+services:
+
+  homeassistant:
+    container_name: ha
+    image: homeassistant/home-assistant:latest
+    volumes:
+      - /home/$USER/HA/containers/ha:/config
+      - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped
+    network_mode: host
+    healthcheck:
+      test: ["CMD", "curl", "-f", "[REDACTED]"]
+      interval: 30s
+      timeout: 10s
+      retries: 6
+    depends_on:
+      - influxdb
+      - mqtt
+
+  syncthing:
+    container_name: hasync
+    restart: unless-stopped
+    image: linuxserver/syncthing
+    volumes:
+      - /home/$USER/HA/containers/syncthing:/config
+      - /home/$USER/HA/containers/ha:/sync
+      - /etc/localtime:/etc/localtime:ro
+    network_mode: host
+    environment:
+      - PGID=${PGID}
+      - PUID=${PUID}
+
+  mqtt:
+    container_name: mqtt
+    restart: unless-stopped
+    image: eclipse-mosquitto:latest
+    volumes:
+      - /home/$USER/HA/containers/mosquitto:/mosquitto
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "${mqtt_port1}:${mqtt_port1}"
+      - "${mqtt_port2}:${mqtt_port2}"
+
+  grafana:
+    container_name: grafana
+    restart: unless-stopped
+    image: grafana/grafana:latest
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /home/$USER/HA/containers/grafana:/var/lib/grafana
+    user: ${PUID}
+    ports:
+      - "${grafana_port1}:${grafana_port2}"
+
+  influxdb:
+    container_name: influxdb
+    restart: unless-stopped
+    image: influxdb:latest
+    volumes:
+      - influxdb_data:/var/lib/influxdb
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "${influxdb_port1}:${influxdb_port2}"
+
+  tileboard:
+    container_name: tileboard
+    restart: unless-stopped
+    image: httpd:2.4
+    volumes:
+      - /home/$USER/HA/containers/tileboard:/usr/local/apache2/htdocs
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "${tileboard_port1}:${tileboard_port2}"
+
+  tasmoadmin:
+    container_name: tasmoadmin
+    restart: unless-stopped
+    image: raymondmm/tasmoadmin
+    volumes:
+      - tasmoadmin_data:/data
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "${tasmoadmin_port1}:${tasmoadmin_port2}"
+
+  netdata:
+     container_name: netdata
+     image: netdata/netdata
+     restart: unless-stopped
+     ports:
+       - "${netdata_port1}:${netdata_port2}"
+     cap_add:
+       - SYS_PTRACE
+     security_opt:
+       - apparmor:unconfined
+     volumes:
+       - /proc:/host/proc:ro
+       - /sys:/host/sys:ro
+       - /var/run/docker.sock:/var/run/docker.sock:ro
+     environment: 
+       - PGID=${netdata_PGID}
+
+  dockermon:
+    container_name: dockermon
+    restart: unless-stopped
+    image: philhawthorne/ha-dockermon
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /home/$USER/HA/containers/dockermon:/config
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "${dockermon_port1}:${dockermon_port2}"
+
+  letsencrypt-nginx:
+    container_name: letsencrypt-nginx
+    image: linuxserver/letsencrypt
+    restart: unless-stopped
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /home/$USER/HA/containers/letsencrypt-nginx:/config
+    environment:
+      - PGID=${PGID}
+      - PUID=${PUID}
+      - EMAIL=${email}
+      - URL=${ha_url}
+      - SUBDOMAINS=${subdomains}
+      - VALIDATION=http
+      - TZ=${timezone}
+    ports:
+      - "80:80"
+      - "443:443"
+
+  node-red:
+    container_name: nodered
+    image: nodered/node-red-docker
+    restart: unless-stopped
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /home/$USER/HA/containers/node-red:/data
+    environment:
+      - PGID=${PGID}
+      - PUID=${PUID}
+    ports:
+      - "${node_red_port1}:${node_red_port2}"
+
+volumes:
+  mosquitto_data:
+  influxdb_data:
+  tasmoadmin_data:
