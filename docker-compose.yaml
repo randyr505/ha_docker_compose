@@ -10,6 +10,11 @@ services:
       - /etc/localtime:/etc/localtime:ro
     restart: unless-stopped
     network_mode: host
+    environment:
+      - UDEV=1
+    privileged: true
+    devices:
+      - /dev/ttyACM0
     healthcheck:
       test: ["CMD", "curl", "-f", "[REDACTED]"]
       interval: 30s
