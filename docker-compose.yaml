@@ -6,7 +6,7 @@ services:
     container_name: ha
     image: homeassistant/home-assistant:latest
     volumes:
-      - /home/$USER/HA/containers/ha:/config
+      - /home/$USER/Docker/containers/ha:/config
       - /etc/localtime:/etc/localtime:ro
     restart: unless-stopped
     network_mode: host
@@ -24,13 +24,40 @@ services:
       - influxdb
       - mqtt
 
+  adb:
+    container_name: adb
+    restart: unless-stopped
+    image: sorccu/adb
+    command: sh -c "/config/startup.sh &"
+    volumes:
+      - /home/$USER/Docker/containers/adb:/config
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "${adb_port1}:${adb_port2}"
+
+  watchtower:
+  container_name: watchtower
+  restart: always
+  image: containrrr/watchtower
+  environment:
+    - WATCHTOWER_NOTIFICATIONS=email
+    - WATCHTOWER_NOTIFICATION_EMAIL_FROM=${email}
+    - WATCHTOWER_NOTIFICATION_EMAIL_TO=${email}
+    - WATCHTOWER_NOTIFICATION_EMAIL_SERVER=${email_server}
+    - WATCHTOWER_NOTIFICATION_EMAIL_SERVER_USER=${email_user}
+    - WATCHTOWER_NOTIFICATION_EMAIL_SERVER_PASSWORD=${email_pw}
+  volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+  command: --debug true --cleanup true ${docker_images_to_update}
+
   syncthing:
     container_name: hasync
     restart: unless-stopped
     image: linuxserver/syncthing
     volumes:
-      - /home/$USER/HA/containers/syncthing:/config
-      - /home/$USER/HA/containers/ha:/sync
+      - /home/$USER/Docker/containers/syncthing:/config
+      - /home/$USER/Docker/containers/ha:/sync
       - /etc/localtime:/etc/localtime:ro
     network_mode: host
     environment:
@@ -42,7 +69,7 @@ services:
     restart: unless-stopped
     image: eclipse-mosquitto:latest
     volumes:
-      - /home/$USER/HA/containers/mosquitto:/mosquitto
+      - /home/$USER/Docker/containers/mosquitto:/mosquitto
       - /etc/localtime:/etc/localtime:ro
     ports:
       - "${mqtt_port1}:${mqtt_port1}"
@@ -54,7 +81,7 @@ services:
     image: grafana/grafana:latest
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - /home/$USER/HA/containers/grafana:/var/lib/grafana
+      - /home/$USER/Docker/containers/grafana:/var/lib/grafana
     user: ${PUID}
     ports:
       - "${grafana_port1}:${grafana_port2}"
@@ -74,7 +101,7 @@ services:
     restart: unless-stopped
     image: httpd:2.4
     volumes:
-      - /home/$USER/HA/containers/tileboard:/usr/local/apache2/htdocs
+      - /home/$USER/Docker/containers/tileboard:/usr/local/apache2/htdocs
       - /etc/localtime:/etc/localtime:ro
     ports:
       - "${tileboard_port1}:${tileboard_port2}"
@@ -112,7 +139,7 @@ services:
     image: philhawthorne/ha-dockermon
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - /home/$USER/HA/containers/dockermon:/config
+      - /home/$USER/Docker/containers/dockermon:/config
       - /etc/localtime:/etc/localtime:ro
     ports:
       - "${dockermon_port1}:${dockermon_port2}"
@@ -123,7 +150,7 @@ services:
     restart: unless-stopped
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - /home/$USER/HA/containers/letsencrypt-nginx:/config
+      - /home/$USER/Docker/containers/letsencrypt-nginx:/config
     environment:
       - PGID=${PGID}
       - PUID=${PUID}
@@ -142,7 +169,7 @@ services:
     restart: unless-stopped
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - /home/$USER/HA/containers/node-red:/data
+      - /home/$USER/Docker/containers/node-red:/data
     environment:
       - PGID=${PGID}
       - PUID=${PUID}
