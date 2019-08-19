@@ -5,6 +5,7 @@ services:
   homeassistant:
     container_name: ha
     image: homeassistant/home-assistant:latest
+    env_file: ./.env
     volumes:
       - /home/$USER/Docker/containers/ha:/config
       - /etc/localtime:/etc/localtime:ro
@@ -16,7 +17,7 @@ services:
     devices:
       - /dev/ttyACM0
     healthcheck:
-      test: ["CMD", "curl", "-f", "[REDACTED]"]
+      test: ["CMD", "curl", "-f", "http://localhost:$ha_port1"]
       interval: 30s
       timeout: 10s
       retries: 6
@@ -28,7 +29,8 @@ services:
     container_name: adb
     restart: unless-stopped
     image: sorccu/adb
-    command: sh -c "/config/startup.sh &"
+    env_file: ./.env
+    command: sh -c "/config/startup.sh & /config/adb_start"
     volumes:
       - /home/$USER/Docker/containers/adb:/config
       - /etc/timezone:/etc/timezone:ro
