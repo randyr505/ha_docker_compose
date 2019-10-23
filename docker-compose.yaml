@@ -2,6 +2,16 @@ version: '3.4'
 
 services:
 
+  esphome:
+    container_name: esphome
+    image: esphome/esphome:latest
+    env_file: ./.env
+    volumes:
+      - /home/$USER/Docker/containers/esphome:/config:rw
+      - /etc/localtime:/etc/localtime:ro
+    network_mode: host
+    restart: always
+
   homeassistant:
     container_name: ha
     image: homeassistant/home-assistant:latest
@@ -159,6 +169,7 @@ services:
       - EMAIL=${email}
       - URL=${ha_url}
       - SUBDOMAINS=${subdomains}
+        #- EXTRA_DOMAINS=${extra_domains}
       - VALIDATION=http
       - TZ=${timezone}
     ports:
