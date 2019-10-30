@@ -6,7 +6,7 @@
 # search docker-compose.yaml for volume paths to create
 volume_paths=$(grep $(awk -F= '/container_dir/{print$2}' .env) docker-compose.yaml | awk '{print$2}' | awk -F: '{print$1}')
 
-mkdir -p $container_dir
+mkdir -p $containers
 
 for vp in $volume_paths
 do
