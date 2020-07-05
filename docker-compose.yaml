@@ -19,7 +19,7 @@ services:
     volumes:
       - /home/$USER/Docker/containers/ha:/config
       - /etc/localtime:/etc/localtime:ro
-    restart: unless-stopped
+    restart: on-failure
     network_mode: host
     environment:
       - UDEV=1
@@ -35,23 +35,24 @@ services:
       - influxdb
       - mqtt
 
-  adb:
-    container_name: adb
-    restart: unless-stopped
-    image: sorccu/adb
-    env_file: ./.env
-    command: sh -c "/config/startup.sh & /config/adb_start"
-    volumes:
-      - /home/$USER/Docker/containers/adb:/config
-      - /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
-    ports:
-      - "${adb_port1}:${adb_port2}"
+        #adb:
+        #container_name: adb
+        #restart: on-failure
+        #image: sorccu/adb
+        #env_file: ./.env
+        #command: sh -c "/config/startup.sh & /config/adb_start"
+        #volumes:
+        #- /home/$USER/Docker/containers/adb:/config
+        #- /etc/timezone:/etc/timezone:ro
+        #- /etc/localtime:/etc/localtime:ro
+        #ports:
+        #- "${adb_port1}:${adb_port2}"
 
   watchtower:
     container_name: watchtower
-    restart: unless-stopped
+    restart: on-failure
     image: containrrr/watchtower
+    env_file: ./.env
     environment:
       - WATCHTOWER_NOTIFICATIONS=email
       - WATCHTOWER_NOTIFICATION_EMAIL_FROM=${email}
@@ -65,8 +66,9 @@ services:
 
   syncthing:
     container_name: hasync
-    restart: unless-stopped
+    restart: on-failure
     image: linuxserver/syncthing
+    env_file: ./.env
     volumes:
       - /home/$USER/Docker/containers/syncthing:/config
       - /home/$USER/Docker/containers/ha:/sync
@@ -78,10 +80,17 @@ services:
 
   mqtt:
     container_name: mqtt
-    restart: unless-stopped
+    restart: on-failure
     image: eclipse-mosquitto:latest
+    env_file: ./.env
+    user: 1883:1883
+    environment:
+      - PGID=1883
+      - PUID=1883
     volumes:
-      - /home/$USER/Docker/containers/mosquitto:/mosquitto
+      - /home/$USER/Docker/containers/mosquitto/config:/mosquitto/config:rw
+      - /home/$USER/Docker/containers/mosquitto/data:/mosquitto/data:rw
+      - /home/$USER/Docker/containers/mosquitto/log:/mosquitto/log:rw
       - /etc/localtime:/etc/localtime:ro
     ports:
       - "${mqtt_port1}:${mqtt_port1}"
@@ -89,8 +98,9 @@ services:
 
   grafana:
     container_name: grafana
-    restart: unless-stopped
+    restart: on-failure
     image: grafana/grafana:latest
+    env_file: ./.env
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /home/$USER/Docker/containers/grafana:/var/lib/grafana
@@ -100,8 +110,9 @@ services:
 
   influxdb:
     container_name: influxdb
-    restart: unless-stopped
+    restart: on-failure
     image: influxdb:latest
+    env_file: ./.env
     volumes:
       - influxdb_data:/var/lib/influxdb
       - /etc/localtime:/etc/localtime:ro
@@ -110,8 +121,9 @@ services:
 
   tileboard:
     container_name: tileboard
-    restart: unless-stopped
+    restart: on-failure
     image: httpd:2.4
+    env_file: ./.env
     volumes:
       - /home/$USER/Docker/containers/tileboard:/usr/local/apache2/htdocs
       - /etc/localtime:/etc/localtime:ro
@@ -120,8 +132,9 @@ services:
 
   tasmoadmin:
     container_name: tasmoadmin
-    restart: unless-stopped
+    restart: on-failure
     image: raymondmm/tasmoadmin
+    env_file: ./.env
     volumes:
       - tasmoadmin_data:/data
       - /etc/localtime:/etc/localtime:ro
@@ -129,26 +142,28 @@ services:
       - "${tasmoadmin_port1}:${tasmoadmin_port2}"
 
   netdata:
-     container_name: netdata
-     image: netdata/netdata
-     restart: unless-stopped
-     ports:
-       - "${netdata_port1}:${netdata_port2}"
-     cap_add:
-       - SYS_PTRACE
-     security_opt:
-       - apparmor:unconfined
-     volumes:
-       - /proc:/host/proc:ro
-       - /sys:/host/sys:ro
-       - /var/run/docker.sock:/var/run/docker.sock:ro
-     environment: 
-       - PGID=${netdata_PGID}
+    container_name: netdata
+    image: netdata/netdata
+    env_file: ./.env
+    restart: on-failure
+    ports:
+      - "${netdata_port1}:${netdata_port2}"
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - apparmor:unconfined
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment: 
+      - PGID=${netdata_PGID}
 
   dockermon:
     container_name: dockermon
-    restart: unless-stopped
+    restart: on-failure
     image: philhawthorne/ha-dockermon
+    env_file: ./.env
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /home/$USER/Docker/containers/dockermon:/config
@@ -159,7 +174,8 @@ services:
   letsencrypt-nginx:
     container_name: letsencrypt-nginx
     image: linuxserver/letsencrypt
-    restart: unless-stopped
+    env_file: ./.env
+    restart: on-failure
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /home/$USER/Docker/containers/letsencrypt-nginx:/config
@@ -176,20 +192,31 @@ services:
       - "80:80"
       - "443:443"
 
-  node-red:
-    container_name: nodered
-    image: nodered/node-red-docker
-    restart: unless-stopped
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - /home/$USER/Docker/containers/node-red:/data
-    environment:
-      - PGID=${PGID}
-      - PUID=${PUID}
-    ports:
-      - "${node_red_port1}:${node_red_port2}"
+        #node-red:
+        #container_name: nodered
+        #image: nodered/node-red-docker
+        #env_file: ./.env
+        #restart: on-failure
+        #volumes:
+        #- /etc/localtime:/etc/localtime:ro
+        #- /home/$USER/Docker/containers/node-red:/data
+        #environment:
+        #- PGID=${PGID}
+        #- PUID=${PUID}
+        #ports:
+        #- "${node_red_port1}:${node_red_port2}"
+      
+        #glances:
+        #container_name: glances
+        #restart: always
+        #image: nicolargo/glances
+        #volumes:
+        #- /var/run/docker.sock:/var/run/docker.sock
+        #ports:
+        #- "${glances_port1}-${glances_port2}:${glances_port1}-${glances_port2}"
+        #environment:
+        #- GLANCES_OPT=-w
 
 volumes:
-  mosquitto_data:
   influxdb_data:
   tasmoadmin_data:
