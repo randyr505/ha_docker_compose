@@ -2,15 +2,15 @@ version: '3.4'
 
 services:
 
-  esphome:
-    container_name: esphome
-    image: esphome/esphome:latest
-    env_file: ./.env
-    volumes:
-      - /home/$USER/Docker/containers/esphome:/config:rw
-      - /etc/localtime:/etc/localtime:ro
-    network_mode: host
-    restart: always
+        #esphome:
+        #container_name: esphome
+        #image: esphome/esphome:latest
+        #env_file: ./.env
+        #volumes:
+        #- /home/$USER/Docker/containers/esphome:/config:rw
+        #- /etc/localtime:/etc/localtime:ro
+        #network_mode: host
+        #restart: always
 
   homeassistant:
     container_name: ha
@@ -62,7 +62,7 @@ services:
       - WATCHTOWER_NOTIFICATION_EMAIL_SERVER_PASSWORD=${email_pw}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    command: --debug true --cleanup true ${docker_images_to_update}
+    command: --debug true --cleanup true ha hasync mqtt grafana influxdb tasmoadmin dockermon letsencrypt-nginx nodered esphome
 
   syncthing:
     container_name: hasync
@@ -119,16 +119,16 @@ services:
     ports:
       - "${influxdb_port1}:${influxdb_port2}"
 
-  tileboard:
-    container_name: tileboard
-    restart: on-failure
-    image: httpd:2.4
-    env_file: ./.env
-    volumes:
-      - /home/$USER/Docker/containers/tileboard:/usr/local/apache2/htdocs
-      - /etc/localtime:/etc/localtime:ro
-    ports:
-      - "${tileboard_port1}:${tileboard_port2}"
+        #tileboard:
+        #container_name: tileboard
+        #restart: on-failure
+        #image: httpd:2.4
+        #env_file: ./.env
+        #volumes:
+        #- /home/$USER/Docker/containers/tileboard:/usr/local/apache2/htdocs
+        #- /etc/localtime:/etc/localtime:ro
+        #ports:
+        #- "${tileboard_port1}:${tileboard_port2}"
 
   tasmoadmin:
     container_name: tasmoadmin
@@ -159,17 +159,17 @@ services:
     environment: 
       - PGID=${netdata_PGID}
 
-  dockermon:
-    container_name: dockermon
-    restart: on-failure
-    image: philhawthorne/ha-dockermon
-    env_file: ./.env
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /home/$USER/Docker/containers/dockermon:/config
-      - /etc/localtime:/etc/localtime:ro
-    ports:
-      - "${dockermon_port1}:${dockermon_port2}"
+        #dockermon:
+        #container_name: dockermon
+        #restart: on-failure
+        #image: philhawthorne/ha-dockermon
+        #env_file: ./.env
+        #volumes:
+        #- /var/run/docker.sock:/var/run/docker.sock
+        #- /home/$USER/Docker/containers/dockermon:/config
+        #- /etc/localtime:/etc/localtime:ro
+        #ports:
+        #- "${dockermon_port1}:${dockermon_port2}"
 
   letsencrypt-nginx:
     container_name: letsencrypt-nginx
