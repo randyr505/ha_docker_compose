@@ -2,22 +2,34 @@ version: '3.4'
 
 services:
 
-        #esphome:
-        #container_name: esphome
-        #image: esphome/esphome:latest
-        #env_file: ./.env
+    #transmission-openvpn:
         #volumes:
-        #- /home/$USER/Docker/containers/esphome:/config:rw
-        #- /etc/localtime:/etc/localtime:ro
-        #network_mode: host
-        #restart: always
+            #- /home/$USER/docker/containers/ovpn:/data
+            #- '/etc/localtime:/etc/localtime:ro'
+        #environment:
+            #- CREATE_TUN_DEVICE=true
+            #- OPENVPN_PROVIDER=PIA
+            #- OPENVPN_CONFIG=US Toronto
+            #- OPENVPN_USERNAME=randyr505
+            #- OPENVPN_PASSWORD=$ovpnpasswd
+            #- WEBPROXY_ENABLED=false
+            #- LOCAL_NETWORK=192.168.0.0/16
+        #cap_add:
+            #- NET_ADMIN
+        #logging:
+            #driver: json-file
+            #options:
+                #max-size: 10m
+        #ports:
+            #- '9091:9091'
+        #image: haugene/transmission-openvpn
 
   homeassistant:
     container_name: ha
     image: homeassistant/home-assistant:latest
     env_file: ./.env
     volumes:
-      - /home/$USER/Docker/containers/ha:/config
+      - /home/randyr505/docker/containers/ha:/config
       - /etc/localtime:/etc/localtime:ro
     restart: on-failure
     network_mode: host
@@ -35,18 +47,18 @@ services:
       - influxdb
       - mqtt
 
-        #adb:
-        #container_name: adb
-        #restart: on-failure
-        #image: sorccu/adb
-        #env_file: ./.env
-        #command: sh -c "/config/startup.sh & /config/adb_start"
-        #volumes:
-        #- /home/$USER/Docker/containers/adb:/config
-        #- /etc/timezone:/etc/timezone:ro
-        #- /etc/localtime:/etc/localtime:ro
-        #ports:
-        #- "${adb_port1}:${adb_port2}"
+  adb:
+    container_name: adb
+    restart: on-failure
+    image: sorccu/adb
+    env_file: ./.env
+    command: sh -c "/config/startup.sh & /config/adb_start"
+    volumes:
+      - /home/randyr505/docker/containers/adb:/config
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "${adb_port1}:${adb_port2}"
 
   watchtower:
     container_name: watchtower
@@ -70,8 +82,8 @@ services:
     image: linuxserver/syncthing
     env_file: ./.env
     volumes:
-      - /home/$USER/Docker/containers/syncthing:/config
-      - /home/$USER/Docker/containers/ha:/sync
+      - /home/randyr505/docker/containers/syncthing:/config
+      - /home/randyr505/docker/containers/ha:/sync
       - /etc/localtime:/etc/localtime:ro
     network_mode: host
     environment:
@@ -88,9 +100,9 @@ services:
       - PGID=1883
       - PUID=1883
     volumes:
-      - /home/$USER/Docker/containers/mosquitto/config:/mosquitto/config:rw
-      - /home/$USER/Docker/containers/mosquitto/data:/mosquitto/data:rw
-      - /home/$USER/Docker/containers/mosquitto/log:/mosquitto/log:rw
+      - /home/randyr505/docker/containers/mosquitto/config:/mosquitto/config:rw
+      - /home/randyr505/docker/containers/mosquitto/data:/mosquitto/data:rw
+      - /home/randyr505/docker/containers/mosquitto/log:/mosquitto/log:rw
       - /etc/localtime:/etc/localtime:ro
     ports:
       - "${mqtt_port1}:${mqtt_port1}"
@@ -103,8 +115,11 @@ services:
     env_file: ./.env
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - /home/$USER/Docker/containers/grafana:/var/lib/grafana
+      - /home/randyr505/docker/containers/grafana:/var/lib/grafana
     user: ${PUID}
+    environment:
+      - PGID=${PGID}
+      - PUID=${PUID}
     ports:
       - "${grafana_port1}:${grafana_port2}"
 
@@ -118,17 +133,6 @@ services:
       - /etc/localtime:/etc/localtime:ro
     ports:
       - "${influxdb_port1}:${influxdb_port2}"
-
-        #tileboard:
-        #container_name: tileboard
-        #restart: on-failure
-        #image: httpd:2.4
-        #env_file: ./.env
-        #volumes:
-        #- /home/$USER/Docker/containers/tileboard:/usr/local/apache2/htdocs
-        #- /etc/localtime:/etc/localtime:ro
-        #ports:
-        #- "${tileboard_port1}:${tileboard_port2}"
 
   tasmoadmin:
     container_name: tasmoadmin
@@ -159,17 +163,17 @@ services:
     environment: 
       - PGID=${netdata_PGID}
 
-        #dockermon:
-        #container_name: dockermon
-        #restart: on-failure
-        #image: philhawthorne/ha-dockermon
-        #env_file: ./.env
-        #volumes:
-        #- /var/run/docker.sock:/var/run/docker.sock
-        #- /home/$USER/Docker/containers/dockermon:/config
-        #- /etc/localtime:/etc/localtime:ro
-        #ports:
-        #- "${dockermon_port1}:${dockermon_port2}"
+  dockermon:
+    container_name: dockermon
+    restart: on-failure
+    image: philhawthorne/ha-dockermon
+    env_file: ./.env
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /home/randyr505/docker/containers/dockermon:/config
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "${dockermon_port1}:${dockermon_port2}"
 
   letsencrypt-nginx:
     container_name: letsencrypt-nginx
@@ -178,7 +182,7 @@ services:
     restart: on-failure
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - /home/$USER/Docker/containers/letsencrypt-nginx:/config
+      - /home/randyr505/docker/containers/letsencrypt-nginx:/config
     environment:
       - PGID=${PGID}
       - PUID=${PUID}
@@ -192,31 +196,20 @@ services:
       - "80:80"
       - "443:443"
 
-        #node-red:
-        #container_name: nodered
-        #image: nodered/node-red-docker
-        #env_file: ./.env
-        #restart: on-failure
-        #volumes:
-        #- /etc/localtime:/etc/localtime:ro
-        #- /home/$USER/Docker/containers/node-red:/data
-        #environment:
-        #- PGID=${PGID}
-        #- PUID=${PUID}
-        #ports:
-        #- "${node_red_port1}:${node_red_port2}"
+  node-red:
+    container_name: nodered
+    image: nodered/node-red-docker
+    env_file: ./.env
+    restart: on-failure
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /home/randyr505/docker/containers/node-red:/data
+    environment:
+      - PGID=${PGID}
+      - PUID=${PUID}
+    ports:
+      - "${node_red_port1}:${node_red_port2}"
       
-        #glances:
-        #container_name: glances
-        #restart: always
-        #image: nicolargo/glances
-        #volumes:
-        #- /var/run/docker.sock:/var/run/docker.sock
-        #ports:
-        #- "${glances_port1}-${glances_port2}:${glances_port1}-${glances_port2}"
-        #environment:
-        #- GLANCES_OPT=-w
-
 volumes:
   influxdb_data:
   tasmoadmin_data:
