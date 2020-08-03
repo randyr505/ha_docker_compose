@@ -10,7 +10,7 @@ services:
             #- CREATE_TUN_DEVICE=true
             #- OPENVPN_PROVIDER=PIA
             #- OPENVPN_CONFIG=US Toronto
-            #- OPENVPN_USERNAME=randyr505
+            #- OPENVPN_USERNAME=$USER
             #- OPENVPN_PASSWORD=$ovpnpasswd
             #- WEBPROXY_ENABLED=false
             #- LOCAL_NETWORK=192.168.0.0/16
@@ -29,7 +29,7 @@ services:
     image: homeassistant/home-assistant:latest
     env_file: ./.env
     volumes:
-      - /home/randyr505/docker/containers/ha:/config
+      - /home/$USER/docker/containers/ha:/config
       - /etc/localtime:/etc/localtime:ro
     restart: on-failure
     network_mode: host
@@ -54,7 +54,7 @@ services:
     env_file: ./.env
     command: sh -c "/config/startup.sh & /config/adb_start"
     volumes:
-      - /home/randyr505/docker/containers/adb:/config
+      - /home/$USER/docker/containers/adb:/config
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     ports:
@@ -82,8 +82,8 @@ services:
     image: linuxserver/syncthing
     env_file: ./.env
     volumes:
-      - /home/randyr505/docker/containers/syncthing:/config
-      - /home/randyr505/docker/containers/ha:/sync
+      - /home/$USER/docker/containers/syncthing:/config
+      - /home/$USER/docker/containers/ha:/sync
       - /etc/localtime:/etc/localtime:ro
     network_mode: host
     environment:
@@ -100,9 +100,9 @@ services:
       - PGID=1883
       - PUID=1883
     volumes:
-      - /home/randyr505/docker/containers/mosquitto/config:/mosquitto/config:rw
-      - /home/randyr505/docker/containers/mosquitto/data:/mosquitto/data:rw
-      - /home/randyr505/docker/containers/mosquitto/log:/mosquitto/log:rw
+      - /home/$USER/docker/containers/mosquitto/config:/mosquitto/config:rw
+      - /home/$USER/docker/containers/mosquitto/data:/mosquitto/data:rw
+      - /home/$USER/docker/containers/mosquitto/log:/mosquitto/log:rw
       - /etc/localtime:/etc/localtime:ro
     ports:
       - "${mqtt_port1}:${mqtt_port1}"
@@ -115,7 +115,7 @@ services:
     env_file: ./.env
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - /home/randyr505/docker/containers/grafana:/var/lib/grafana
+      - /home/$USER/docker/containers/grafana:/var/lib/grafana
     user: ${PUID}
     environment:
       - PGID=${PGID}
@@ -170,7 +170,7 @@ services:
     env_file: ./.env
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - /home/randyr505/docker/containers/dockermon:/config
+      - /home/$USER/docker/containers/dockermon:/config
       - /etc/localtime:/etc/localtime:ro
     ports:
       - "${dockermon_port1}:${dockermon_port2}"
@@ -182,7 +182,7 @@ services:
     restart: on-failure
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - /home/randyr505/docker/containers/letsencrypt-nginx:/config
+      - /home/$USER/docker/containers/letsencrypt-nginx:/config
     environment:
       - PGID=${PGID}
       - PUID=${PUID}
@@ -203,7 +203,7 @@ services:
     restart: on-failure
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - /home/randyr505/docker/containers/node-red:/data
+      - /home/$USER/docker/containers/node-red:/data
     environment:
       - PGID=${PGID}
       - PUID=${PUID}

@@ -1,7 +1,5 @@
 .DS_Store
 .env
 .swp
-containers/
-secrets/
-credentials.json
-token.json
+*.json
+backitup.log

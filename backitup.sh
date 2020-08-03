@@ -1,4 +1,6 @@
 #!/bin/sh
+# Add this file to cron to automated backups every 8 hours
+# 0 0,8,16 * * * $HOME/docker/docker_compose/backitup.sh 2>&1 >> $HOME/docker/docker_compose/backitup.log
 
 . ./.env
 
