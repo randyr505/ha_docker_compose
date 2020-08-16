@@ -120,6 +120,9 @@ services:
     environment:
       - PGID=${PGID}
       - PUID=${PUID}
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
     ports:
       - "${grafana_port1}:${grafana_port2}"
 
@@ -209,6 +212,15 @@ services:
       - PUID=${PUID}
     ports:
       - "${node_red_port1}:${node_red_port2}"
+
+  octoprint:
+    image: octoprint/octoprint
+    ports:
+      - "${octoprint_port1}:${octoprint_port2}"
+    # devices:
+    #  - /dev/ttyACM0:/dev/ttyACM0
+    volumes:
+     - /home/$USER/docker/containers/octoprint:/home/octoprint
       
 volumes:
   influxdb_data:
